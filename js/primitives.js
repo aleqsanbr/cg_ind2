@@ -2,11 +2,10 @@
 // Геометрические примитивы для ray tracing
 //
 
-// Луч
 class Ray {
   constructor(origin, direction) {
-    this.origin = origin; // Point3D
-    this.direction = direction.clone(); // Point3D (normalized)
+    this.origin = origin;
+    this.direction = direction.clone();
     this.normalize();
   }
 
@@ -24,7 +23,6 @@ class Ray {
   }
 }
 
-// Запись пересечения
 class HitRecord {
   constructor() {
     this.t = Infinity;
@@ -46,12 +44,11 @@ class HitRecord {
   }
 }
 
-// Сфера
 class Sphere {
   constructor(center, radius, material) {
-    this.center = center; // Point3D
+    this.center = center;
     this.radius = radius;
-    this.material = material; // RTMaterial
+    this.material = material;
   }
 
   hit(ray, tMin, tMax, rec) {
@@ -89,19 +86,17 @@ class Sphere {
   }
 }
 
-// Axis-Aligned Box (куб/параллелепипед)
 class Box {
   constructor(minPoint, maxPoint, material) {
-    this.min = minPoint; // Point3D
-    this.max = maxPoint; // Point3D
-    this.material = material; // RTMaterial
+    this.min = minPoint;
+    this.max = maxPoint;
+    this.material = material;
   }
 
   hit(ray, tMin, tMax, rec) {
     let tNear = tMin;
     let tFar = tMax;
     let hitNormal = new Point3D(0, 0, 0);
-    let hitAxis = -1;
 
     const axes = ['x', 'y', 'z'];
 
@@ -112,17 +107,16 @@ class Box {
       let t0 = (this.min[axis] - ray.origin[axis]) * invD;
       let t1 = (this.max[axis] - ray.origin[axis]) * invD;
 
-      let normalSign = 1;
+      let isNearMin = true;
       if (invD < 0) {
         [t0, t1] = [t1, t0];
-        normalSign = -1;
+        isNearMin = false;
       }
 
       if (t0 > tNear) {
         tNear = t0;
         hitNormal = new Point3D(0, 0, 0);
-        hitNormal[axis] = -normalSign;
-        hitAxis = i;
+        hitNormal[axis] = isNearMin ? -1 : 1;
       }
 
       if (t1 < tFar) {
@@ -143,19 +137,16 @@ class Box {
   }
 }
 
-// Квадрат (для стен Cornell Box)
 class Quad {
   constructor(corner, edge1, edge2, material) {
-    this.corner = corner; // Point3D
-    this.edge1 = edge1; // Point3D (вектор)
-    this.edge2 = edge2; // Point3D (вектор)
+    this.corner = corner;
+    this.edge1 = edge1;
+    this.edge2 = edge2;
     this.material = material;
 
-    // Вычисляем нормаль через векторное произведение
     this.normal = this.crossProduct(edge1, edge2);
     this.normalizeVector(this.normal);
 
-    // Вычисляем d для уравнения плоскости
     this.d = this.normal.x * corner.x + this.normal.y * corner.y + this.normal.z * corner.z;
   }
 
@@ -183,10 +174,8 @@ class Quad {
 
     const intersection = ray.at(t);
 
-    // Вектор от угла до точки пересечения
     const planarHitPt = new Point3D(intersection.x - this.corner.x, intersection.y - this.corner.y, intersection.z - this.corner.z);
 
-    // Проверяем, что точка внутри квадрата
     const alpha = (planarHitPt.x * this.edge1.x + planarHitPt.y * this.edge1.y + planarHitPt.z * this.edge1.z) / (this.edge1.x * this.edge1.x + this.edge1.y * this.edge1.y + this.edge1.z * this.edge1.z);
 
     const beta = (planarHitPt.x * this.edge2.x + planarHitPt.y * this.edge2.y + planarHitPt.z * this.edge2.z) / (this.edge2.x * this.edge2.x + this.edge2.y * this.edge2.y + this.edge2.z * this.edge2.z);

@@ -1,6 +1,5 @@
 //
 // Ray Tracer для Cornell Box
-// Основной класс трассировщика
 //
 
 class RayTracer {
@@ -9,10 +8,9 @@ class RayTracer {
     this.height = height;
     this.maxDepth = 5;
     this.scene = new Scene();
-    this.samplesPerPixel = 10; // Для anti-aliasing (пока 1)
-    this.shadowSamples = 20; // Количество сэмплов для мягких теней
+    this.samplesPerPixel = 1;
+    this.shadowSamples = 20;
 
-    // Камера
     this.cameraPos = new Point3D(0, 0, 600);
     this.fov = 40;
   }
@@ -21,20 +19,17 @@ class RayTracer {
     this.maxDepth = depth;
   }
 
-  // Коэффициент Френеля
   schlick(cosine, refIdx) {
     let r0 = (1 - refIdx) / (1 + refIdx);
     r0 = r0 * r0;
     return r0 + (1 - r0) * Math.pow(1 - cosine, 5);
   }
 
-  // Мягкие тени с семплированием
   calculateSoftShadow(point, light, normal) {
     let shadowFactor = 0;
     const samples = this.shadowSamples;
 
     for (let i = 0; i < samples; i++) {
-      // Случайная точка на поверхности источника света
       const randomOffset = VectorMath.randomInUnitDisk();
       const lightSamplePos = new Point3D(light.position.x + randomOffset.x * light.radius, light.position.y + randomOffset.y * light.radius, light.position.z + randomOffset.z * light.radius);
 
@@ -42,21 +37,18 @@ class RayTracer {
       const distToLight = VectorMath.length(toLightVec);
       const toLightDir = VectorMath.normalize(toLightVec);
 
-      // Проверяем, направлен ли луч к источнику света
       if (VectorMath.dot(toLightDir, normal) <= 0) {
         shadowFactor += 1.0;
         continue;
       }
 
-      // Смещаем начало луча от поверхности
       const shadowOrigin = VectorMath.add(point, VectorMath.multiply(normal, 0.001));
       const shadowRay = new Ray(shadowOrigin, toLightDir);
       const hit = this.scene.hit(shadowRay, 0.001, distToLight - 0.001);
 
       if (hit) {
-        // Если объект прозрачный, частично пропускаем свет
         if (hit.material.transparency > 0) {
-          shadowFactor += 1 - hit.material.transparency * 0.7;
+          shadowFactor += 1 - hit.material.transparency * 0.8;
         } else {
           shadowFactor += 1.0;
         }
@@ -66,11 +58,9 @@ class RayTracer {
     return shadowFactor / samples;
   }
 
-  // Освещение по Фонгу с улучшениями
   shade(rec, ray) {
     const material = rec.material;
 
-    // Ambient освещение (глобальное + от сцены)
     let color = {
       r: material.color.r * (material.ambient + this.scene.ambientLight.r * 0.5),
       g: material.color.g * (material.ambient + this.scene.ambientLight.g * 0.5),
@@ -79,22 +69,18 @@ class RayTracer {
 
     const viewDir = VectorMath.normalize(VectorMath.subtract(ray.origin, rec.point));
 
-    // Освещение от каждого источника
     for (const light of this.scene.lights) {
       const toLightVec = VectorMath.subtract(light.position, rec.point);
       const distToLight = VectorMath.length(toLightVec);
       const lightDir = VectorMath.normalize(toLightVec);
 
-      // Мягкие тени
       const shadowFactor = this.calculateSoftShadow(rec.point, light, rec.normal);
-      if (shadowFactor >= 0.99) continue; // Полная тень
+      if (shadowFactor >= 0.99) continue;
 
       const lightContribution = 1.0 - shadowFactor;
 
-      // Затухание света с расстоянием (inverse square law)
       const attenuation = 1.0 / (1.0 + 0.0001 * distToLight * distToLight);
 
-      // Диффузное освещение
       const diff = Math.max(0, VectorMath.dot(rec.normal, lightDir));
       const diffuse = {
         r: material.color.r * material.diffuse * diff * light.intensity * light.color.r * attenuation,
@@ -102,7 +88,6 @@ class RayTracer {
         b: material.color.b * material.diffuse * diff * light.intensity * light.color.b * attenuation
       };
 
-      // Зеркальное освещение (блик)
       const reflectDir = VectorMath.reflect(VectorMath.multiply(lightDir, -1), rec.normal);
       const specDot = Math.max(0, VectorMath.dot(viewDir, reflectDir));
       const spec = Math.pow(specDot, material.shininess);
@@ -113,7 +98,6 @@ class RayTracer {
         b: light.color.b * material.specular * spec * light.intensity * attenuation
       };
 
-      // Добавляем вклад света с учетом теней
       color.r += (diffuse.r + specular.r) * lightContribution;
       color.g += (diffuse.g + specular.g) * lightContribution;
       color.b += (diffuse.b + specular.b) * lightContribution;
@@ -122,7 +106,6 @@ class RayTracer {
     return color;
   }
 
-  // Основная функция трассировки луча
   trace(ray, depth) {
     if (depth <= 0) {
       return { r: 0, g: 0, b: 0 };
@@ -135,24 +118,17 @@ class RayTracer {
     }
 
     const material = rec.material;
-    let localColor = this.shade(rec, ray);
 
-    // Отражение
-    if (material.reflectivity > 0) {
-      const reflectDir = VectorMath.reflect(ray.direction, rec.normal);
-      const reflectOrigin = VectorMath.add(rec.point, VectorMath.multiply(reflectDir, 0.001));
-      const reflectRay = new Ray(reflectOrigin, reflectDir);
-      const reflectColor = this.trace(reflectRay, depth - 1);
+    const hasReflection = material.reflectivity > 0.01;
+    const hasTransparency = material.transparency > 0.01;
 
-      localColor = {
-        r: localColor.r * (1 - material.reflectivity) + reflectColor.r * material.reflectivity,
-        g: localColor.g * (1 - material.reflectivity) + reflectColor.g * material.reflectivity,
-        b: localColor.b * (1 - material.reflectivity) + reflectColor.b * material.reflectivity
-      };
+    if (!hasReflection && !hasTransparency) {
+      return this.shade(rec, ray);
     }
 
-    // Прозрачность/преломление (закон Снеллиуса)
-    if (material.transparency > 0) {
+    let finalColor = { r: 0, g: 0, b: 0 };
+
+    if (hasTransparency) {
       const refractiveIndex = material.refractiveIndex;
       const etaRatio = rec.frontFace ? 1.0 / refractiveIndex : refractiveIndex;
 
@@ -160,36 +136,99 @@ class RayTracer {
       const sinTheta = Math.sqrt(1.0 - cosTheta * cosTheta);
       const cannotRefract = etaRatio * sinTheta > 1.0;
 
-      const fresnel = this.schlick(cosTheta, etaRatio);
+      if (cannotRefract) {
+        const reflectDir = VectorMath.reflect(ray.direction, rec.normal);
+        const offset = VectorMath.multiply(rec.normal, rec.frontFace ? 0.001 : -0.001);
+        const reflectOrigin = VectorMath.add(rec.point, offset);
+        const reflectRay = new Ray(reflectOrigin, reflectDir);
+        const reflectColor = this.trace(reflectRay, depth - 1);
 
-      let refractDir;
-      if (cannotRefract || fresnel > 0.5) {
-        // Отражение (полное внутреннее или по Френелю)
-        refractDir = VectorMath.reflect(ray.direction, rec.normal);
+        const surfaceColor = this.shade(rec, ray);
+        finalColor = {
+          r: surfaceColor.r * (1 - material.transparency) + reflectColor.r * material.transparency,
+          g: surfaceColor.g * (1 - material.transparency) + reflectColor.g * material.transparency,
+          b: surfaceColor.b * (1 - material.transparency) + reflectColor.b * material.transparency
+        };
+      } else if (hasReflection) {
+        const reflectProb = this.schlick(cosTheta, etaRatio);
+
+        const reflectDir = VectorMath.reflect(ray.direction, rec.normal);
+        const reflectOffset = VectorMath.multiply(rec.normal, rec.frontFace ? 0.001 : -0.001);
+        const reflectOrigin = VectorMath.add(rec.point, reflectOffset);
+        const reflectRay = new Ray(reflectOrigin, reflectDir);
+        const reflectedColor = this.trace(reflectRay, depth - 1);
+
+        const refractDir = VectorMath.refract(ray.direction, rec.normal, etaRatio);
+        let refractedColor;
+
+        if (refractDir) {
+          const refractOffset = VectorMath.multiply(rec.normal, rec.frontFace ? -0.001 : 0.001);
+          const refractOrigin = VectorMath.add(rec.point, refractOffset);
+          const refractRay = new Ray(refractOrigin, refractDir);
+          refractedColor = this.trace(refractRay, depth - 1);
+        } else {
+          refractedColor = reflectedColor;
+        }
+
+        finalColor = {
+          r: reflectedColor.r * reflectProb + refractedColor.r * (1 - reflectProb),
+          g: reflectedColor.g * reflectProb + refractedColor.g * (1 - reflectProb),
+          b: reflectedColor.b * reflectProb + refractedColor.b * (1 - reflectProb)
+        };
+
+        const surfaceColor = this.shade(rec, ray);
+        finalColor = {
+          r: surfaceColor.r * (1 - material.transparency) + finalColor.r * material.transparency,
+          g: surfaceColor.g * (1 - material.transparency) + finalColor.g * material.transparency,
+          b: surfaceColor.b * (1 - material.transparency) + finalColor.b * material.transparency
+        };
       } else {
-        // Преломление по закону Снеллиуса
-        refractDir = VectorMath.refract(ray.direction, rec.normal, etaRatio);
-        if (!refractDir) {
-          refractDir = VectorMath.reflect(ray.direction, rec.normal);
+        const refractDir = VectorMath.refract(ray.direction, rec.normal, etaRatio);
+
+        if (refractDir) {
+          const refractOffset = VectorMath.multiply(rec.normal, rec.frontFace ? -0.001 : 0.001);
+          const refractOrigin = VectorMath.add(rec.point, refractOffset);
+          const refractRay = new Ray(refractOrigin, refractDir);
+          const refractColor = this.trace(refractRay, depth - 1);
+
+          const surfaceColor = this.shade(rec, ray);
+          finalColor = {
+            r: surfaceColor.r * (1 - material.transparency) + refractColor.r * material.transparency,
+            g: surfaceColor.g * (1 - material.transparency) + refractColor.g * material.transparency,
+            b: surfaceColor.b * (1 - material.transparency) + refractColor.b * material.transparency
+          };
+        } else {
+          const reflectDir = VectorMath.reflect(ray.direction, rec.normal);
+          const offset = VectorMath.multiply(rec.normal, rec.frontFace ? 0.001 : -0.001);
+          const reflectOrigin = VectorMath.add(rec.point, offset);
+          const reflectRay = new Ray(reflectOrigin, reflectDir);
+          const reflectColor = this.trace(reflectRay, depth - 1);
+
+          const surfaceColor = this.shade(rec, ray);
+          finalColor = {
+            r: surfaceColor.r * (1 - material.transparency) + reflectColor.r * material.transparency,
+            g: surfaceColor.g * (1 - material.transparency) + reflectColor.g * material.transparency,
+            b: surfaceColor.b * (1 - material.transparency) + reflectColor.b * material.transparency
+          };
         }
       }
+    } else if (hasReflection) {
+      const localColor = this.shade(rec, ray);
+      const reflectDir = VectorMath.reflect(ray.direction, rec.normal);
+      const reflectOrigin = VectorMath.add(rec.point, VectorMath.multiply(rec.normal, 0.001));
+      const reflectRay = new Ray(reflectOrigin, reflectDir);
+      const reflectColor = this.trace(reflectRay, depth - 1);
 
-      // Важно: для прозрачных объектов смещаем точку в направлении луча
-      const refractOrigin = VectorMath.add(rec.point, VectorMath.multiply(refractDir, 0.001));
-      const refractRay = new Ray(refractOrigin, refractDir);
-      const refractColor = this.trace(refractRay, depth - 1);
-
-      localColor = {
-        r: localColor.r * (1 - material.transparency) + refractColor.r * material.transparency,
-        g: localColor.g * (1 - material.transparency) + refractColor.g * material.transparency,
-        b: localColor.b * (1 - material.transparency) + refractColor.b * material.transparency
+      finalColor = {
+        r: localColor.r * (1 - material.reflectivity) + reflectColor.r * material.reflectivity,
+        g: localColor.g * (1 - material.reflectivity) + reflectColor.g * material.reflectivity,
+        b: localColor.b * (1 - material.reflectivity) + reflectColor.b * material.reflectivity
       };
     }
 
-    return localColor;
+    return finalColor;
   }
 
-  // Асинхронный рендеринг
   async renderAsync(ctx, onProgress = null) {
     const imageData = ctx.createImageData(this.width, this.height);
     const data = imageData.data;
@@ -210,11 +249,10 @@ class RayTracer {
 
           let color = this.trace(ray, this.maxDepth);
 
-          // Тональная компрессия и гамма-коррекция
           color = {
-            r: Math.pow(Math.min(1, color.r), 1 / 2.2),
-            g: Math.pow(Math.min(1, color.g), 1 / 2.2),
-            b: Math.pow(Math.min(1, color.b), 1 / 2.2)
+            r: Math.pow(Math.min(1, Math.max(0, color.r)), 1 / 2.2),
+            g: Math.pow(Math.min(1, Math.max(0, color.g)), 1 / 2.2),
+            b: Math.pow(Math.min(1, Math.max(0, color.b)), 1 / 2.2)
           };
 
           const idx = (y * this.width + x) * 4;
