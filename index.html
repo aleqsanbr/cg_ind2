@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cornell Box - Ray Tracing</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="workspace">
+      <div class="sidebar">
+        <div>
+          <h2 style="margin: 0 0 15px 0; font-size: 18px">Cornell Box</h2>
+
+          <button id="btnRender" class="projection-btn active">Рендер</button>
+
+          <div id="renderInfo" style="margin: 10px 0; font-size: 12px; color: #666">Готово к рендерингу</div>
+        </div>
+
+        <div class="mode-section collapsible">
+          <p><b>Объекты сцены</b></p>
+
+          <div style="margin-bottom: 12px; padding: 8px; background: #f5f5f5; border-radius: 4px">
+            <p style="margin: 0 0 6px 0; font-size: 13px"><b>Куб</b></p>
+            <label>
+              <input type="checkbox" id="cubeMirror" />
+              <span>Зеркальный</span>
+            </label>
+            <br />
+            <label>
+              <input type="checkbox" id="cubeTransparent" />
+              <span>Прозрачный</span>
+            </label>
+          </div>
+
+          <div style="margin-bottom: 12px; padding: 8px; background: #f5f5f5; border-radius: 4px">
+            <p style="margin: 0 0 6px 0; font-size: 13px"><b>Параллелепипед</b></p>
+            <label>
+              <input type="checkbox" id="boxMirror" />
+              <span>Зеркальный</span>
+            </label>
+            <br />
+            <label>
+              <input type="checkbox" id="boxTransparent" />
+              <span>Прозрачный</span>
+            </label>
+          </div>
+
+          <div style="margin-bottom: 12px; padding: 8px; background: #f5f5f5; border-radius: 4px">
+            <p style="margin: 0 0 6px 0; font-size: 13px"><b>Сфера 1</b></p>
+            <label>
+              <input type="checkbox" id="sphere1Mirror" />
+              <span>Зеркальная</span>
+            </label>
+            <br />
+            <label>
+              <input type="checkbox" id="sphere1Transparent" />
+              <span>Прозрачная</span>
+            </label>
+          </div>
+
+          <div style="margin-bottom: 12px; padding: 8px; background: #f5f5f5; border-radius: 4px">
+            <p style="margin: 0 0 6px 0; font-size: 13px"><b>Сфера 2</b></p>
+            <label>
+              <input type="checkbox" id="sphere2Mirror" />
+              <span>Зеркальная</span>
+            </label>
+            <br />
+            <label>
+              <input type="checkbox" id="sphere2Transparent" />
+              <span>Прозрачная</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="mode-section collapsible">
+          <p><b>Зеркальная стена</b></p>
+          <label>
+            <input type="checkbox" id="enableMirrorWall" />
+            <span>Включить</span>
+          </label>
+          <br />
+          <br />
+          <label>
+            Стена:
+            <select id="mirrorWallSelect" style="width: 100%; padding: 6px; margin-top: 4px">
+              <option value="none">Нет</option>
+              <option value="left">Левая (красная)</option>
+              <option value="right">Правая (синяя)</option>
+              <option value="back">Задняя</option>
+              <option value="floor">Пол</option>
+              <option value="ceiling">Потолок</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="mode-section collapsible">
+          <p><b>Основной источник света</b></p>
+          <div style="display: flex; gap: 4px; margin-bottom: 8px">
+            <label style="flex: 1">
+              X:
+              <input type="number" id="light1X" value="0" step="10" style="width: 100%; padding: 4px" />
+            </label>
+            <label style="flex: 1">
+              Y:
+              <input type="number" id="light1Y" value="190" step="10" style="width: 100%; padding: 4px" />
+            </label>
+            <label style="flex: 1">
+              Z:
+              <input type="number" id="light1Z" value="0" step="10" style="width: 100%; padding: 4px" />
+            </label>
+          </div>
+          <label>
+            Интенсивность:
+            <input type="number" id="light1Intensity" value="1.0" min="0" max="2" step="0.1" style="width: 60px" />
+          </label>
+        </div>
+
+        <div class="mode-section collapsible">
+          <p><b>Дополнительный источник света</b></p>
+          <label>
+            <input type="checkbox" id="enableLight2" />
+            <span>Включить</span>
+          </label>
+          <br />
+          <br />
+          <div style="display: flex; gap: 4px; margin-bottom: 8px">
+            <label style="flex: 1">
+              X:
+              <input type="number" id="light2X" value="150" step="10" style="width: 100%; padding: 4px" />
+            </label>
+            <label style="flex: 1">
+              Y:
+              <input type="number" id="light2Y" value="100" step="10" style="width: 100%; padding: 4px" />
+            </label>
+            <label style="flex: 1">
+              Z:
+              <input type="number" id="light2Z" value="150" step="10" style="width: 100%; padding: 4px" />
+            </label>
+          </div>
+          <label>
+            Интенсивность:
+            <input type="number" id="light2Intensity" value="0.5" min="0" max="2" step="0.1" style="width: 60px" />
+          </label>
+        </div>
+
+        <div class="mode-section collapsible">
+          <p><b>Настройки рендеринга</b></p>
+          <label>
+            Глубина отражений:
+            <input type="number" id="maxDepth" value="5" min="1" max="10" step="1" style="width: 60px" />
+          </label>
+          <br />
+          <br />
+          <label>
+            Коэфф. преломления:
+            <input type="number" id="refractionIndex" value="1.5" min="1" max="3" step="0.1" style="width: 60px" />
+          </label>
+        </div>
+      </div>
+
+      <div class="canvas-container">
+        <canvas id="canvas"></canvas>
+      </div>
+    </div>
+
+    <script src="js/geometry.js"></script>
+    <script src="js/raytracer.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
