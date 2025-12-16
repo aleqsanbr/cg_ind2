@@ -59,7 +59,7 @@ function createCornellBoxScene(options = {}) {
 
   scene.add(new Quad(new Point3D(roomSize, -roomSize, -roomSize), new Point3D(0, 0, 2 * roomSize), new Point3D(0, 2 * roomSize, 0), getMaterial('right', blueMat)));
 
-  scene.add(new Quad(new Point3D(-roomSize, -roomSize, -roomSize), new Point3D(2 * roomSize, 0, 0), new Point3D(0, 2 * roomSize, 0), getMaterial('back', whiteMat)));
+  scene.add(new Quad(new Point3D(-roomSize, -roomSize, -roomSize), new Point3D(2 * roomSize, 0, 0), new Point3D(0, 2 * roomSize, 0), getMaterial('back', blueMat)));
 
   scene.add(new Quad(new Point3D(-roomSize, -roomSize, -roomSize), new Point3D(2 * roomSize, 0, 0), new Point3D(0, 0, 2 * roomSize), getMaterial('floor', whiteMat)));
 

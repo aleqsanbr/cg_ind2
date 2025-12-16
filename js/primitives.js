@@ -53,13 +53,9 @@ class Sphere {
 
   hit(ray, tMin, tMax, rec) {
     const oc = new Point3D(ray.origin.x - this.center.x, ray.origin.y - this.center.y, ray.origin.z - this.center.z);
-
     const a = ray.direction.x * ray.direction.x + ray.direction.y * ray.direction.y + ray.direction.z * ray.direction.z;
-
     const halfB = oc.x * ray.direction.x + oc.y * ray.direction.y + oc.z * ray.direction.z;
-
     const c = oc.x * oc.x + oc.y * oc.y + oc.z * oc.z - this.radius * this.radius;
-
     const discriminant = halfB * halfB - a * c;
 
     if (discriminant < 0) return false;
@@ -76,9 +72,7 @@ class Sphere {
 
     rec.t = root;
     rec.point = ray.at(rec.t);
-
     const outwardNormal = new Point3D((rec.point.x - this.center.x) / this.radius, (rec.point.y - this.center.y) / this.radius, (rec.point.z - this.center.z) / this.radius);
-
     rec.setFaceNormal(ray, outwardNormal);
     rec.material = this.material;
 
@@ -128,6 +122,10 @@ class Box {
 
     if (tNear < tMin || tNear > tMax) return false;
 
+    if (hitNormal.x === 0 && hitNormal.y === 0 && hitNormal.z === 0) {
+      return false;
+    }
+
     rec.t = tNear;
     rec.point = ray.at(rec.t);
     rec.setFaceNormal(ray, hitNormal);
@@ -143,10 +141,8 @@ class Quad {
     this.edge1 = edge1;
     this.edge2 = edge2;
     this.material = material;
-
     this.normal = this.crossProduct(edge1, edge2);
     this.normalizeVector(this.normal);
-
     this.d = this.normal.x * corner.x + this.normal.y * corner.y + this.normal.z * corner.z;
   }
 
@@ -173,7 +169,6 @@ class Quad {
     if (t < tMin || t > tMax) return false;
 
     const intersection = ray.at(t);
-
     const planarHitPt = new Point3D(intersection.x - this.corner.x, intersection.y - this.corner.y, intersection.z - this.corner.z);
 
     const alpha = (planarHitPt.x * this.edge1.x + planarHitPt.y * this.edge1.y + planarHitPt.z * this.edge1.z) / (this.edge1.x * this.edge1.x + this.edge1.y * this.edge1.y + this.edge1.z * this.edge1.z);

@@ -2,55 +2,40 @@
 // Система освещения и материалов для ray tracing
 //
 
-/**
- * Класс для представления источника света
- */
 class Light {
   constructor(position, color = { r: 1, g: 1, b: 1 }, intensity = 1.0) {
-    this.position = position; // Point3D
-    this.color = color; // {r, g, b} в диапазоне [0, 1]
-    this.intensity = intensity; // Интенсивность [0, 1+]
+    this.position = position;
+    this.color = color;
+    this.intensity = intensity;
   }
 }
 
-/**
- * Класс для представления материала объекта
- */
 class Material {
   constructor(color = { r: 0.5, g: 0.5, b: 0.5 }, ambient = 0.1, diffuse = 0.7, specular = 0.3, shininess = 32) {
-    this.color = color; // {r, g, b} в диапазоне [0, 1]
-    this.ambient = ambient; // Коэффициент фонового освещения
-    this.diffuse = diffuse; // Коэффициент диффузного отражения
-    this.specular = specular; // Коэффициент зеркального отражения
-    this.shininess = shininess; // Показатель блеска (для модели Фонга)
+    this.color = color;
+    this.ambient = ambient;
+    this.diffuse = diffuse;
+    this.specular = specular;
+    this.shininess = shininess;
   }
 }
 
-/**
- * Расширенный материал для ray tracing с отражением и преломлением
- */
 class RTMaterial extends Material {
   constructor(color, ambient = 0.1, diffuse = 0.7, specular = 0.2, shininess = 32, reflectivity = 0, transparency = 0, refractiveIndex = 1.5) {
     super(color, ambient, diffuse, specular, shininess);
-    this.reflectivity = reflectivity; // 0-1: 0 = не зеркальный, 1 = полностью зеркальный
-    this.transparency = transparency; // 0-1: 0 = непрозрачный, 1 = полностью прозрачный
-    this.refractiveIndex = refractiveIndex; // Коэффициент преломления
+    this.reflectivity = reflectivity;
+    this.transparency = transparency;
+    this.refractiveIndex = refractiveIndex;
   }
 }
 
-/**
- * Источник света для ray tracing
- */
 class RTLight extends Light {
   constructor(position, color = { r: 1, g: 1, b: 1 }, intensity = 1.0, radius = 10) {
     super(position, color, intensity);
-    this.radius = radius; // Радиус источника для мягких теней
+    this.radius = radius;
   }
 }
 
-/**
- * Вспомогательные функции для работы с векторами
- */
 class VectorMath {
   static dot(a, b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
@@ -87,7 +72,6 @@ class VectorMath {
     const cosTheta = Math.min(-VectorMath.dot(direction, normal), 1.0);
     const sinTheta = Math.sqrt(1.0 - cosTheta * cosTheta);
 
-    // Полное внутреннее отражение
     if (etaRatio * sinTheta > 1.0) {
       return null;
     }
@@ -102,7 +86,6 @@ class VectorMath {
     return new Point3D(rOutPerpX + parallelCoef * normal.x, rOutPerpY + parallelCoef * normal.y, rOutPerpZ + parallelCoef * normal.z);
   }
 
-  // Случайная точка на единичной сфере (для мягких теней)
   static randomUnitVector() {
     const theta = Math.random() * 2 * Math.PI;
     const phi = Math.acos(2 * Math.random() - 1);
@@ -110,7 +93,6 @@ class VectorMath {
     return new Point3D(sinPhi * Math.cos(theta), sinPhi * Math.sin(theta), Math.cos(phi));
   }
 
-  // Случайная точка в диске (для мягких теней)
   static randomInUnitDisk() {
     const r = Math.sqrt(Math.random());
     const theta = Math.random() * 2 * Math.PI;

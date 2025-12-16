@@ -10,7 +10,6 @@ class RayTracer {
     this.scene = new Scene();
     this.samplesPerPixel = 1;
     this.shadowSamples = 20;
-
     this.cameraPos = new Point3D(0, 0, 600);
     this.fov = 40;
   }
@@ -60,7 +59,6 @@ class RayTracer {
 
   shade(rec, ray) {
     const material = rec.material;
-
     let color = {
       r: material.color.r * (material.ambient + this.scene.ambientLight.r * 0.5),
       g: material.color.g * (material.ambient + this.scene.ambientLight.g * 0.5),
@@ -78,7 +76,6 @@ class RayTracer {
       if (shadowFactor >= 0.99) continue;
 
       const lightContribution = 1.0 - shadowFactor;
-
       const attenuation = 1.0 / (1.0 + 0.0001 * distToLight * distToLight);
 
       const diff = Math.max(0, VectorMath.dot(rec.normal, lightDir));
@@ -112,13 +109,11 @@ class RayTracer {
     }
 
     const rec = this.scene.hit(ray, 0.001, Infinity);
-
     if (!rec) {
       return this.scene.backgroundColor;
     }
 
     const material = rec.material;
-
     const hasReflection = material.reflectivity > 0.01;
     const hasTransparency = material.transparency > 0.01;
 
@@ -131,29 +126,23 @@ class RayTracer {
     if (hasTransparency) {
       const refractiveIndex = material.refractiveIndex;
       const etaRatio = rec.frontFace ? 1.0 / refractiveIndex : refractiveIndex;
-
       const cosTheta = Math.min(-VectorMath.dot(ray.direction, rec.normal), 1.0);
       const sinTheta = Math.sqrt(1.0 - cosTheta * cosTheta);
       const cannotRefract = etaRatio * sinTheta > 1.0;
 
+      const epsilon = 0.1;
+
       if (cannotRefract) {
         const reflectDir = VectorMath.reflect(ray.direction, rec.normal);
-        const offset = VectorMath.multiply(rec.normal, rec.frontFace ? 0.001 : -0.001);
+        const offset = VectorMath.multiply(rec.normal, epsilon);
         const reflectOrigin = VectorMath.add(rec.point, offset);
         const reflectRay = new Ray(reflectOrigin, reflectDir);
-        const reflectColor = this.trace(reflectRay, depth - 1);
-
-        const surfaceColor = this.shade(rec, ray);
-        finalColor = {
-          r: surfaceColor.r * (1 - material.transparency) + reflectColor.r * material.transparency,
-          g: surfaceColor.g * (1 - material.transparency) + reflectColor.g * material.transparency,
-          b: surfaceColor.b * (1 - material.transparency) + reflectColor.b * material.transparency
-        };
-      } else if (hasReflection) {
+        finalColor = this.trace(reflectRay, depth - 1);
+      } else {
         const reflectProb = this.schlick(cosTheta, etaRatio);
 
         const reflectDir = VectorMath.reflect(ray.direction, rec.normal);
-        const reflectOffset = VectorMath.multiply(rec.normal, rec.frontFace ? 0.001 : -0.001);
+        const reflectOffset = VectorMath.multiply(rec.normal, epsilon);
         const reflectOrigin = VectorMath.add(rec.point, reflectOffset);
         const reflectRay = new Ray(reflectOrigin, reflectDir);
         const reflectedColor = this.trace(reflectRay, depth - 1);
@@ -162,7 +151,7 @@ class RayTracer {
         let refractedColor;
 
         if (refractDir) {
-          const refractOffset = VectorMath.multiply(rec.normal, rec.frontFace ? -0.001 : 0.001);
+          const refractOffset = VectorMath.multiply(rec.normal, -epsilon);
           const refractOrigin = VectorMath.add(rec.point, refractOffset);
           const refractRay = new Ray(refractOrigin, refractDir);
           refractedColor = this.trace(refractRay, depth - 1);
@@ -175,42 +164,6 @@ class RayTracer {
           g: reflectedColor.g * reflectProb + refractedColor.g * (1 - reflectProb),
           b: reflectedColor.b * reflectProb + refractedColor.b * (1 - reflectProb)
         };
-
-        const surfaceColor = this.shade(rec, ray);
-        finalColor = {
-          r: surfaceColor.r * (1 - material.transparency) + finalColor.r * material.transparency,
-          g: surfaceColor.g * (1 - material.transparency) + finalColor.g * material.transparency,
-          b: surfaceColor.b * (1 - material.transparency) + finalColor.b * material.transparency
-        };
-      } else {
-        const refractDir = VectorMath.refract(ray.direction, rec.normal, etaRatio);
-
-        if (refractDir) {
-          const refractOffset = VectorMath.multiply(rec.normal, rec.frontFace ? -0.001 : 0.001);
-          const refractOrigin = VectorMath.add(rec.point, refractOffset);
-          const refractRay = new Ray(refractOrigin, refractDir);
-          const refractColor = this.trace(refractRay, depth - 1);
-
-          const surfaceColor = this.shade(rec, ray);
-          finalColor = {
-            r: surfaceColor.r * (1 - material.transparency) + refractColor.r * material.transparency,
-            g: surfaceColor.g * (1 - material.transparency) + refractColor.g * material.transparency,
-            b: surfaceColor.b * (1 - material.transparency) + refractColor.b * material.transparency
-          };
-        } else {
-          const reflectDir = VectorMath.reflect(ray.direction, rec.normal);
-          const offset = VectorMath.multiply(rec.normal, rec.frontFace ? 0.001 : -0.001);
-          const reflectOrigin = VectorMath.add(rec.point, offset);
-          const reflectRay = new Ray(reflectOrigin, reflectDir);
-          const reflectColor = this.trace(reflectRay, depth - 1);
-
-          const surfaceColor = this.shade(rec, ray);
-          finalColor = {
-            r: surfaceColor.r * (1 - material.transparency) + reflectColor.r * material.transparency,
-            g: surfaceColor.g * (1 - material.transparency) + reflectColor.g * material.transparency,
-            b: surfaceColor.b * (1 - material.transparency) + reflectColor.b * material.transparency
-          };
-        }
       }
     } else if (hasReflection) {
       const localColor = this.shade(rec, ray);
