@@ -1,7 +1,3 @@
-//
-// Базовые геометрические классы для ray tracing
-//
-
 class Point3D {
   constructor(x, y, z) {
     this.x = x;

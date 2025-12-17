@@ -1,7 +1,3 @@
-//
-// Геометрические примитивы для ray tracing
-//
-
 class Ray {
   constructor(origin, direction) {
     this.origin = origin;

@@ -1,7 +1,3 @@
-//
-// Ray Tracer для Cornell Box
-//
-
 class RayTracer {
   constructor(width, height) {
     this.width = width;

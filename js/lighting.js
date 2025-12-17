@@ -1,7 +1,3 @@
-//
-// Система освещения и материалов для ray tracing
-//
-
 class Light {
   constructor(position, color = { r: 1, g: 1, b: 1 }, intensity = 1.0) {
     this.position = position;

@@ -1,7 +1,3 @@
-//
-// Сцена и создание Cornell Box
-//
-
 class Scene {
   constructor() {
     this.objects = [];
