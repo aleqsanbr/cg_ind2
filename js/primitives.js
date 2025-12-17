@@ -88,9 +88,10 @@ class Box {
   }
 
   hit(ray, tMin, tMax, rec) {
-    let tNear = tMin;
-    let tFar = tMax;
+    let tNear = -Infinity;
+    let tFar = Infinity;
     let hitNormal = new Point3D(0, 0, 0);
+    let farNormal = new Point3D(0, 0, 0);
 
     const axes = ['x', 'y', 'z'];
 
@@ -115,20 +116,31 @@ class Box {
 
       if (t1 < tFar) {
         tFar = t1;
+        farNormal = new Point3D(0, 0, 0);
+        farNormal[axis] = isNearMin ? 1 : -1;
       }
 
       if (tFar < tNear) return false;
     }
 
-    if (tNear < tMin || tNear > tMax) return false;
-
-    if (hitNormal.x === 0 && hitNormal.y === 0 && hitNormal.z === 0) {
+    let hitT, normal;
+    if (tNear >= tMin && tNear <= tMax) {
+      hitT = tNear;
+      normal = hitNormal;
+    } else if (tFar >= tMin && tFar <= tMax) {
+      hitT = tFar;
+      normal = farNormal;
+    } else {
       return false;
     }
 
-    rec.t = tNear;
+    if (normal.x === 0 && normal.y === 0 && normal.z === 0) {
+      return false;
+    }
+
+    rec.t = hitT;
     rec.point = ray.at(rec.t);
-    rec.setFaceNormal(ray, hitNormal);
+    rec.setFaceNormal(ray, normal);
     rec.material = this.material;
 
     return true;

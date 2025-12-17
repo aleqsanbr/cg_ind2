@@ -130,7 +130,7 @@ class RayTracer {
       const sinTheta = Math.sqrt(1.0 - cosTheta * cosTheta);
       const cannotRefract = etaRatio * sinTheta > 1.0;
 
-      const epsilon = 0.1;
+      const epsilon = 0.001;
 
       if (cannotRefract) {
         const reflectDir = VectorMath.reflect(ray.direction, rec.normal);

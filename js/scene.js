@@ -6,7 +6,7 @@ class Scene {
   constructor() {
     this.objects = [];
     this.lights = [];
-    this.backgroundColor = { r: 0.05, g: 0.05, b: 0.1 };
+    this.backgroundColor = { r: 0.2, g: 0.1, b: 0.2 };
     this.ambientLight = { r: 0.1, g: 0.1, b: 0.1 };
   }
 
@@ -48,7 +48,6 @@ function createCornellBoxScene(options = {}) {
   const whiteMat = new RTMaterial({ r: 0.73, g: 0.73, b: 0.73 }, 0.2, 0.7, 0.1, 16);
   const redMat = new RTMaterial({ r: 0.65, g: 0.05, b: 0.05 }, 0.2, 0.7, 0.1, 16);
   const blueMat = new RTMaterial({ r: 0.1, g: 0.2, b: 0.6 }, 0.2, 0.7, 0.1, 16);
-
   const mirrorMat = new RTMaterial({ r: 0.9, g: 0.9, b: 0.9 }, 0.05, 0.1, 0.8, 128, 0.9, 0, 1.5);
 
   const getMaterial = (wallName, defaultMat) => {
@@ -56,13 +55,9 @@ function createCornellBoxScene(options = {}) {
   };
 
   scene.add(new Quad(new Point3D(-roomSize, -roomSize, roomSize), new Point3D(0, 0, -2 * roomSize), new Point3D(0, 2 * roomSize, 0), getMaterial('left', redMat)));
-
   scene.add(new Quad(new Point3D(roomSize, -roomSize, -roomSize), new Point3D(0, 0, 2 * roomSize), new Point3D(0, 2 * roomSize, 0), getMaterial('right', blueMat)));
-
   scene.add(new Quad(new Point3D(-roomSize, -roomSize, -roomSize), new Point3D(2 * roomSize, 0, 0), new Point3D(0, 2 * roomSize, 0), getMaterial('back', blueMat)));
-
   scene.add(new Quad(new Point3D(-roomSize, -roomSize, -roomSize), new Point3D(2 * roomSize, 0, 0), new Point3D(0, 0, 2 * roomSize), getMaterial('floor', whiteMat)));
-
   scene.add(new Quad(new Point3D(-roomSize, roomSize, -roomSize), new Point3D(2 * roomSize, 0, 0), new Point3D(0, 0, 2 * roomSize), getMaterial('ceiling', whiteMat)));
 
   const yellowColor = { r: 0.9, g: 0.75, b: 0.0 };
