@@ -83,7 +83,7 @@ class Box {
     this.material = material;
   }
 
-  hit(ray, tMin, tMax, rec) {
+  hit(ray, tMin, tMax, rec) { // slab method
     let tNear = -Infinity;
     let tFar = Infinity;
     let hitNormal = new Point3D(0, 0, 0);

@@ -14,7 +14,7 @@ class RayTracer {
     this.maxDepth = depth;
   }
 
-  schlick(cosine, refIdx) {
+  schlick(cosine, refIdx) { // Формула Шлика // коэффициент Френеля - сколько света отражается, а сколько проходит через прозрачный объект
     let r0 = (1 - refIdx) / (1 + refIdx);
     r0 = r0 * r0;
     return r0 + (1 - r0) * Math.pow(1 - cosine, 5);
@@ -59,9 +59,9 @@ class RayTracer {
       r: material.color.r * (material.ambient + this.scene.ambientLight.r * 0.5),
       g: material.color.g * (material.ambient + this.scene.ambientLight.g * 0.5),
       b: material.color.b * (material.ambient + this.scene.ambientLight.b * 0.5)
-    };
+    }; // добавили фоновое освещение
 
-    const viewDir = VectorMath.normalize(VectorMath.subtract(ray.origin, rec.point));
+    const viewDir = VectorMath.normalize(VectorMath.subtract(ray.origin, rec.point)); // для рассчета блеска, т.к. он виден только под определенным углом
 
     for (const light of this.scene.lights) {
       const toLightVec = VectorMath.subtract(light.position, rec.point);
@@ -72,7 +72,7 @@ class RayTracer {
       if (shadowFactor >= 0.99) continue;
 
       const lightContribution = 1.0 - shadowFactor;
-      const attenuation = 1.0 / (1.0 + 0.0001 * distToLight * distToLight);
+      const attenuation = 1.0 / (1.0 + 0.0001 * distToLight * distToLight); // чем дальше лампа, тем темнее
 
       const diff = Math.max(0, VectorMath.dot(rec.normal, lightDir));
       const diffuse = {
@@ -124,7 +124,7 @@ class RayTracer {
       const etaRatio = rec.frontFace ? 1.0 / refractiveIndex : refractiveIndex;
       const cosTheta = Math.min(-VectorMath.dot(ray.direction, rec.normal), 1.0);
       const sinTheta = Math.sqrt(1.0 - cosTheta * cosTheta);
-      const cannotRefract = etaRatio * sinTheta > 1.0;
+      const cannotRefract = etaRatio * sinTheta > 1.0; // проверка полного внутреннего отражения
 
       const epsilon = 0.001;
 

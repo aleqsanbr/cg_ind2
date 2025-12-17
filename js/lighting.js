@@ -65,10 +65,10 @@ class VectorMath {
   }
 
   static refract(direction, normal, etaRatio) {
-    const cosTheta = Math.min(-VectorMath.dot(direction, normal), 1.0);
+    const cosTheta = Math.min(-VectorMath.dot(direction, normal), 1.0); // косинус угла между падающим лучом и нормалью поверхности
     const sinTheta = Math.sqrt(1.0 - cosTheta * cosTheta);
 
-    if (etaRatio * sinTheta > 1.0) {
+    if (etaRatio * sinTheta > 1.0) { // полное внутреннее отражение
       return null;
     }
 
@@ -76,7 +76,7 @@ class VectorMath {
     const rOutPerpY = etaRatio * (direction.y + cosTheta * normal.y);
     const rOutPerpZ = etaRatio * (direction.z + cosTheta * normal.z);
 
-    const perpLenSq = rOutPerpX * rOutPerpX + rOutPerpY * rOutPerpY + rOutPerpZ * rOutPerpZ;
+    const perpLenSq = rOutPerpX * rOutPerpX + rOutPerpY * rOutPerpY + rOutPerpZ * rOutPerpZ; // две части, затем складываем
     const parallelCoef = -Math.sqrt(Math.abs(1.0 - perpLenSq));
 
     return new Point3D(rOutPerpX + parallelCoef * normal.x, rOutPerpY + parallelCoef * normal.y, rOutPerpZ + parallelCoef * normal.z);
